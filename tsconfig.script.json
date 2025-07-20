@@ -1,0 +1,21 @@
+// tsconfig.script.json
+{
+  "compilerOptions": {
+    "module": "CommonJS", // Importante: ts-node funciona mejor con CommonJS para scripts
+    "target": "ES2018",   // O una versión de ES compatible con tu Node.js
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",       // Para resolver @/lib/db
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "create-test-user.ts", // Incluye solo el script que queremos ejecutar
+    "lib/**/*.ts"          // Asegúrate de que las libs que usa el script también se compilen
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

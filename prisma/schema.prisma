@@ -1,0 +1,484 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Enum para el tipo de producto/servicio
+enum ItemType {
+  Product
+  Service
+
+  @@map("itemType") // Mapea el nombre del enum al tipo de columna en la DB si es necesario,
+                    // pero para ENUMs MySQL, Prisma lo maneja automáticamente.
+}
+
+// --- Modelos de Tablas ---
+
+model ClientBranch {
+  branchId       String        @id @default(uuid()) @db.VarChar(36) @map("branchId")
+  clientId       String        @db.VarChar(36) @map("clientId")
+  branchName     String        @db.VarChar(255) @map("branchName")
+  addressLine1   String?       @db.VarChar(255) @map("addressLine1")
+  addressLine2   String?       @db.VarChar(255) @map("addressLine2")
+  communeId      String?       @db.VarChar(36) @map("communeId")
+  postalCode     String?       @db.VarChar(20) @map("postalCode")
+  phoneNumber    String?       @db.VarChar(50) @map("phoneNumber")
+  email          String?       @db.VarChar(255) @map("email")
+  notes          String?       @db.Text @map("notes")
+  isActive       Boolean       @default(true) @map("isActive") @db.TinyInt
+  createdAt      DateTime      @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt      DateTime      @updatedAt @map("updatedAt") @db.DateTime(0)
+
+  // Relaciones
+  client         Client        @relation(fields: [clientId], references: [clientId], onDelete: Cascade, onUpdate: Cascade)
+  commune        Commune?      @relation(fields: [communeId], references: [communeId], onDelete: Restrict, onUpdate: Restrict) // Ajuste para onDelete por defecto
+  clientContacts ClientContact[]
+  quotes         Quote[]
+  workOrders     WorkOrder[]
+
+  @@unique([branchName, clientId], name: "uq_branch_name_client_id")
+  @@index([clientId], name: "fk_clientBranches_clientId") // Este índice es redundante si ya es parte de @@unique o @@id
+  @@index([communeId], name: "clientBranches_communes_FK")
+  @@map("clientBranches")
+}
+
+model ClientContact {
+  contactId        String        @id @default(uuid()) @db.VarChar(36) @map("contactId")
+  branchId         String        @db.VarChar(36) @map("branchId")
+  firstName        String        @db.VarChar(100) @map("firstName")
+  lastName         String        @db.VarChar(100) @map("lastName")
+  email            String?       @unique @db.VarChar(255) @map("email") // uq_contact_email y email son la misma UNIQUE KEY
+  phoneNumber      String?       @db.VarChar(50) @map("phoneNumber")
+  mobileNumber     String?       @db.VarChar(50) @map("mobileNumber")
+  position         String?       @db.VarChar(100) @map("position")
+  isPrimaryContact Boolean?      @default(false) @map("isPrimaryContact") @db.TinyInt
+  notes            String?       @db.Text @map("notes")
+  isActive         Boolean?      @default(true) @map("isActive") @db.TinyInt
+  createdAt        DateTime      @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt        DateTime      @updatedAt @map("updatedAt") @db.DateTime(0)
+
+  // Relaciones
+  clientBranch     ClientBranch  @relation(fields: [branchId], references: [branchId], onDelete: Cascade, onUpdate: Cascade)
+  quotes           Quote[]
+  workOrders       WorkOrder[]
+
+  @@index([firstName, lastName], name: "idx_contact_name")
+  @@index([branchId], name: "fk_clientContacts_branchId")
+  @@map("clientContacts")
+}
+
+model Client {
+  clientId         String        @id @default(uuid()) @db.VarChar(36) @map("clientId")
+  companyId        String        @db.VarChar(36) @map("companyId")
+  clientName       String        @db.VarChar(255) @map("clientName")
+  clientRUT        String?       @unique @db.VarChar(20) @map("clientRUT") // uq_client_rut y clientRUT son la misma UNIQUE KEY
+  clientType       String?       @db.VarChar(50) @map("clientType")
+  billingEmail     String?       @db.VarChar(255) @map("billingEmail")
+  billingPhoneNumber String?     @db.VarChar(50) @map("billingPhoneNumber")
+  addressLine1     String?       @db.VarChar(255) @map("addressLine1")
+  addressLine2     String?       @db.VarChar(255) @map("addressLine2")
+  communeId        String?       @db.VarChar(36) @map("communeId")
+  postalCode       String?       @db.VarChar(20) @map("postalCode")
+  notes            String?       @db.Text @map("notes")
+  isActive         Boolean?      @default(true) @map("isActive") @db.TinyInt
+  createdAt        DateTime      @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt        DateTime      @updatedAt @map("updatedAt") @db.DateTime(0)
+
+  // Relaciones
+  company          Company       @relation(fields: [companyId], references: [companyId], onDelete: Restrict, onUpdate: Cascade)
+  commune          Commune?      @relation(fields: [communeId], references: [communeId], onDelete: Restrict, onUpdate: Restrict) // Ajuste para onDelete por defecto
+  clientBranches   ClientBranch[]
+  quotes           Quote[]
+  workOrders       WorkOrder[]
+
+  @@index([clientName], name: "idx_client_name")
+  @@index([companyId], name: "fk_clients_companyId")
+  @@index([communeId], name: "clients_communes_FK")
+  @@map("clients")
+}
+
+model Commune {
+  communeId    String          @id @default(uuid()) @db.VarChar(36) @map("communeId")
+  provinceId   String          @db.VarChar(36) @map("provinceId")
+  communeName  String          @db.VarChar(100) @map("communeName")
+  communeCode  String?         @db.VarChar(10) @map("communeCode")
+  createdAt    DateTime        @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt    DateTime        @updatedAt @map("updatedAt") @db.DateTime(0)
+
+  // Relaciones
+  province     Province        @relation(fields: [provinceId], references: [provinceId], onDelete: NoAction, onUpdate: NoAction)
+  clientBranches ClientBranch[]
+  clients      Client[]
+  companies    Company[]
+
+  @@unique([communeName, provinceId], name: "uq_communes_name_provinceId")
+  @@index([provinceId], name: "fk_communes_provinceId")
+  @@map("communes")
+}
+
+model Company {
+  companyId    String          @id @default(uuid()) @db.VarChar(36) @map("companyId")
+  companyName  String          @unique @db.VarChar(255) @map("companyName")
+  companyRUT   String?         @unique @db.VarChar(20) @map("companyRUT")
+  addressLine1 String?         @db.VarChar(255) @map("addressLine1")
+  addressLine2 String?         @db.VarChar(255) @map("addressLine2")
+  communeId    String?         @db.VarChar(36) @map("communeId")
+  postalCode   String?         @db.VarChar(20) @map("postalCode")
+  phoneNumber  String?         @db.VarChar(50) @map("phoneNumber")
+  email        String?         @db.VarChar(255) @map("email")
+  website      String?         @db.VarChar(255) @map("website")
+  isActive     Boolean?        @default(true) @map("isActive") @db.TinyInt
+  createdAt    DateTime        @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt    DateTime        @updatedAt @map("updatedAt") @db.DateTime(0)
+
+  // Relaciones
+  commune      Commune?        @relation(fields: [communeId], references: [communeId], onDelete: Restrict, onUpdate: Restrict) // Ajuste para onDelete por defecto
+  clients      Client[]
+  users        User[]
+  quotes       Quote[]
+  workOrders   WorkOrder[]
+
+  @@index([companyName], name: "idx_company_name")
+  @@index([communeId], name: "companies_communes_FK")
+  @@map("companies")
+}
+
+model Country {
+  countryId      String     @id @default(uuid()) @db.VarChar(36) @map("countryId")
+  countryName    String     @unique @db.VarChar(100) @map("countryName")
+  countryIsoCode String     @unique @db.VarChar(2) @map("countryIsoCode")
+  createdAt      DateTime   @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt      DateTime   @updatedAt @map("updatedAt") @db.DateTime(0)
+
+  // Relaciones
+  regions        Region[]
+
+  @@map("countries")
+}
+
+model Currency {
+  currencyId   String    @id @default(uuid()) @db.VarChar(36) @map("currencyId")
+  currencyCode String    @unique @db.VarChar(5) @map("currencyCode")
+  currencyName String    @unique @db.VarChar(100) @map("currencyName")
+  symbol       String?   @db.VarChar(10) @map("symbol")
+  isDefault    Boolean?  @default(false) @map("isDefault") @db.TinyInt
+  isActive     Boolean?  @default(true) @map("isActive") @db.TinyInt
+  createdAt    DateTime  @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt    DateTime  @updatedAt @map("updatedAt") @db.DateTime(0)
+
+  // Relaciones
+  quotes       Quote[]
+
+  @@index([currencyCode], name: "idx_currency_code")
+  @@map("currencies")
+}
+
+model PaymentStatus {
+  paymentStatusId String        @id @default(uuid()) @db.VarChar(36) @map("paymentStatusId")
+  statusName      String        @unique @db.VarChar(100) @map("statusName")
+  description     String?       @db.VarChar(255) @map("description")
+  displayOrder    Int           @unique @map("displayOrder") @db.Int
+  isFinal         Boolean?      @default(false) @map("isFinal") @db.TinyInt
+  isActive        Boolean?      @default(true) @map("isActive") @db.TinyInt
+  createdAt       DateTime      @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt       DateTime      @updatedAt @map("updatedAt") @db.DateTime(0)
+
+  // Relaciones
+  workOrders      WorkOrder[]
+
+  @@index([statusName], name: "idx_paymentStatus_name")
+  @@index([displayOrder], name: "idx_paymentStatus_order")
+  @@map("paymentStatuses")
+}
+
+model ProductAndService {
+  itemId          String        @id @default(uuid()) @db.VarChar(36) @map("itemId")
+  itemCode        String?       @unique @db.VarChar(50) @map("itemCode")
+  itemName        String        @db.VarChar(255) @map("itemName")
+  itemDescription String?       @db.Text @map("itemDescription")
+  itemType        ItemType      @map("itemType") // Usa el enum ItemType
+  unitPrice       Decimal       @default(0.0000) @map("unitPrice") @db.Decimal(18, 4)
+  isActive        Boolean?      @default(true) @map("isActive") @db.TinyInt
+  createdAt       DateTime      @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt       DateTime      @updatedAt @map("updatedAt") @db.DateTime(0)
+  unitOfMeasureId String?       @db.VarChar(36) @map("unitOfMeasureId")
+
+  // Relaciones
+  unitOfMeasure   UnitOfMeasure? @relation(fields: [unitOfMeasureId], references: [unitOfMeasureId], onDelete: Restrict, onUpdate: Cascade)
+  quoteItems      QuoteItem[]
+  workOrderItems  WorkOrderItem[]
+
+  @@index([itemName], name: "idx_item_name")
+  @@index([itemCode], name: "idx_item_code")
+  @@index([itemType], name: "idx_item_type")
+  @@index([unitOfMeasureId], name: "fk_productsAndServices_unitOfMeasureId")
+  @@map("productsAndServices")
+}
+
+model Province {
+  provinceId   String    @id @default(uuid()) @db.VarChar(36) @map("provinceId")
+  regionId     String    @db.VarChar(36) @map("regionId")
+  provinceName String    @unique @db.VarChar(100) @map("provinceName")
+  createdAt    DateTime  @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt    DateTime  @updatedAt @map("updatedAt") @db.DateTime(0)
+
+  // Relaciones
+  region       Region    @relation(fields: [regionId], references: [regionId], onDelete: NoAction, onUpdate: NoAction)
+  communes     Commune[]
+
+  @@index([regionId], name: "fk_provinces_regionId")
+  @@map("provinces")
+}
+
+model QuoteItem {
+  quoteItemId     String        @id @default(uuid()) @db.VarChar(36) @map("quoteItemId")
+  quoteId         String        @db.VarChar(36) @map("quoteId")
+  itemType        String?       @db.VarChar(50) @map("itemType") // Aunque en ProductAndService es enum, aquí puede ser un String genérico
+  itemName        String?       @db.VarChar(255) @map("itemName")
+  itemDescription String?       @db.Text @map("itemDescription")
+  itemId          String?       @db.VarChar(36) @map("itemId")
+  quantity        Decimal       @default(1.0000) @map("quantity") @db.Decimal(10, 4)
+  unitPrice       Decimal       @default(0.0000) @map("unitPrice") @db.Decimal(18, 4)
+  discountPerItem Decimal       @default(0.0000) @map("discountPerItem") @db.Decimal(18, 4)
+  totalPrice      Decimal       @map("totalPrice") @db.Decimal(18, 4)
+  itemOrder       Int?          @map("itemOrder") @db.Int
+  createdAt       DateTime      @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt       DateTime      @updatedAt @map("updatedAt") @db.DateTime(0)
+
+  // Relaciones
+  quote           Quote?        @relation(fields: [quoteId], references: [quoteId], onDelete: Cascade, onUpdate: Cascade) // quoteId no es nullable, pero lo pongo opcional para evitar errores al inicializar
+  productAndService ProductAndService? @relation(fields: [itemId], references: [itemId], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([quoteId], name: "idx_quoteItem_quoteId")
+  @@index([itemId], name: "fk_quoteItems_itemId")
+  @@map("quoteItems")
+}
+
+model QuoteStatus {
+  statusId    String    @id @default(uuid()) @db.VarChar(36) @map("statusId")
+  statusName  String    @unique @db.VarChar(100) @map("statusName")
+  description String?   @db.VarChar(255) @map("description")
+  isFinal     Boolean?  @default(false) @map("isFinal") @db.TinyInt
+  isActive    Boolean?  @default(true) @map("isActive") @db.TinyInt
+  createdAt   DateTime  @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt   DateTime  @updatedAt @map("updatedAt") @db.DateTime(0)
+
+  // Relaciones
+  quotes      Quote[]
+
+  @@index([statusName], name: "idx_status_name")
+  @@map("quoteStatuses")
+}
+
+model Quote {
+  quoteId          String        @id @default(uuid()) @db.VarChar(36) @map("quoteId")
+  companyId        String        @db.VarChar(36) @map("companyId")
+  clientId         String        @db.VarChar(36) @map("clientId")
+  branchId         String?       @db.VarChar(36) @map("branchId")
+  contactId        String?       @db.VarChar(36) @map("contactId")
+  userId           String        @db.VarChar(36) @map("userId")
+  quoteNumber      String        @unique @db.VarChar(50) @map("quoteNumber")
+  quoteDate        DateTime      @default(now()) @map("quoteDate") @db.Date // DATE type
+  expirationDate   DateTime?     @map("expirationDate") @db.Date // DATE type
+  statusId         String        @db.VarChar(36) @map("statusId")
+  currencyId       String        @db.VarChar(36) @map("currencyId")
+  subtotal         Decimal       @default(0.0000) @map("subtotal") @db.Decimal(18, 4)
+  discountAmount   Decimal       @default(0.0000) @map("discountAmount") @db.Decimal(18, 4)
+  taxRate          Decimal       @default(0.1900) @map("taxRate") @db.Decimal(5, 4)
+  taxAmount        Decimal       @default(0.0000) @map("taxAmount") @db.Decimal(18, 4)
+  totalAmount      Decimal       @default(0.0000) @map("totalAmount") @db.Decimal(18, 4)
+  notes            String?       @db.Text @map("notes")
+  customerNotes    String?       @db.Text @map("customerNotes")
+  termsAndConditions String?     @db.Text @map("termsAndConditions")
+  createdAt        DateTime      @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt        DateTime      @updatedAt @map("updatedAt") @db.DateTime(0)
+
+  // Relaciones
+  company          Company       @relation(fields: [companyId], references: [companyId], onDelete: Restrict, onUpdate: Cascade)
+  client           Client        @relation(fields: [clientId], references: [clientId], onDelete: Restrict, onUpdate: Cascade)
+  clientBranch     ClientBranch? @relation(fields: [branchId], references: [branchId], onDelete: SetNull, onUpdate: Cascade)
+  clientContact    ClientContact? @relation(fields: [contactId], references: [contactId], onDelete: SetNull, onUpdate: Cascade)
+  user             User          @relation(fields: [userId], references: [userId], onDelete: Restrict, onUpdate: Cascade)
+  quoteStatus      QuoteStatus   @relation(fields: [statusId], references: [statusId], onDelete: Restrict, onUpdate: Cascade)
+  currency         Currency      @relation(fields: [currencyId], references: [currencyId], onDelete: Restrict, onUpdate: Cascade)
+  quoteItems       QuoteItem[]
+  workOrders       WorkOrder[]
+
+  @@index([quoteNumber], name: "idx_quote_number")
+  @@index([clientId], name: "idx_quote_client")
+  @@index([statusId], name: "idx_quote_status")
+  @@index([branchId], name: "fk_quotes_branchId")
+  @@index([contactId], name: "fk_quotes_contactId")
+  @@index([userId], name: "fk_quotes_userId")
+  @@index([currencyId], name: "fk_quotes_currencyId")
+  @@index([companyId], name: "fk_quotes_companyId")
+  @@map("quotes")
+}
+
+model Region {
+  regionId         String     @id @default(uuid()) @db.VarChar(36) @map("regionId")
+  countryId        String     @db.VarChar(36) @map("countryId")
+  regionName       String     @unique @db.VarChar(100) @map("regionName")
+  regionRomanNumeral String?  @db.VarChar(5) @map("regionRomanNumeral")
+  regionCode       String?    @db.VarChar(5) @map("regionCode")
+  createdAt        DateTime   @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt        DateTime   @updatedAt @map("updatedAt") @db.DateTime(0)
+
+  // Relaciones
+  country          Country    @relation(fields: [countryId], references: [countryId], onDelete: NoAction, onUpdate: NoAction)
+  provinces        Province[]
+
+  @@index([countryId], name: "fk_regions_countryId")
+  @@map("regions")
+}
+
+model UnitOfMeasure {
+  unitOfMeasureId String        @id @default(uuid()) @db.VarChar(36) @map("unitOfMeasureId")
+  unitName        String        @unique @db.VarChar(100) @map("unitName")
+  symbol          String?       @db.VarChar(10) @map("symbol")
+  description     String?       @db.VarChar(255) @map("description")
+  isActive        Boolean?      @default(true) @map("isActive") @db.TinyInt
+  createdAt       DateTime      @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt       DateTime      @updatedAt @map("updatedAt") @db.DateTime(0)
+
+  // Relaciones
+  productsAndServices ProductAndService[]
+
+  @@index([unitName], name: "idx_unit_name")
+  @@index([symbol], name: "idx_symbol")
+  @@map("unitsOfMeasure")
+}
+
+model UserSession {
+  sessionId      String    @id @default(uuid()) @db.VarChar(36) @map("sessionId")
+  userId         String    @db.VarChar(36) @map("userId")
+  refreshToken   String    @unique @db.VarChar(2048) @map("refreshToken") // MySQL UNIQUE KEY limit is 767 bytes, but Prisma handles this by creating uq_userSession_refreshToken(255) as per your script
+  ipAddress      String?   @db.VarChar(45) @map("ipAddress")
+  userAgent      String?   @db.VarChar(500) @map("userAgent")
+  loginTime      DateTime  @default(now()) @map("loginTime") @db.DateTime(0)
+  lastActivityTime DateTime @default(now()) @updatedAt @map("lastActivityTime") @db.DateTime(0) // As per ON UPDATE CURRENT_TIMESTAMP
+  expirationTime DateTime? @map("expirationTime") @db.DateTime(0)
+  isRevoked      Boolean?  @default(false) @map("isRevoked") @db.TinyInt
+  createdAt      DateTime  @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt      DateTime  @updatedAt @map("updatedAt") @db.DateTime(0)
+
+  // Relaciones
+  user           User      @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([userId], name: "idx_userSession_userId")
+  @@index([expirationTime], name: "idx_userSession_expirationTime")
+  @@index([isRevoked], name: "idx_userSession_isRevoked")
+  @@map("userSessions")
+}
+
+model User {
+  userId         String        @id @default(uuid()) @db.VarChar(36) @map("userId")
+  userEmail      String        @unique @db.VarChar(500) @map("userEmail")
+  userPassword   String        @db.VarChar(500) @map("userPassword")
+  userName       String        @db.VarChar(500) @map("userName")
+  companyId      String        @db.VarChar(36) @map("companyId")
+  role           String        @db.VarChar(100) @map("role")
+  createdAt      DateTime      @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt      DateTime      @updatedAt @map("updatedAt") @db.DateTime(0)
+  isActive       Boolean       @default(true) @map("isActive") @db.TinyInt
+
+  // Relaciones
+  company        Company       @relation(fields: [companyId], references: [companyId], onDelete: Restrict, onUpdate: Restrict) // Ajuste para onDelete por defecto
+  userSessions   UserSession[]
+  quotes         Quote[]
+  workOrders     WorkOrder[]
+
+  @@index([companyId], name: "users_companies_FK")
+  @@map("users")
+}
+
+model WorkOrderItem {
+  workOrderItemId String        @id @default(uuid()) @db.VarChar(36) @map("workOrderItemId")
+  workOrderId     String        @db.VarChar(36) @map("workOrderId")
+  itemId          String?       @db.VarChar(36) @map("itemId")
+  itemType        String?       @db.VarChar(50) @map("itemType") // Similar a QuoteItem, puede ser genérico
+  itemName        String?       @db.VarChar(255) @map("itemName")
+  itemDescription String?       @db.Text @map("itemDescription")
+  quantity        Decimal       @default(1.0000) @map("quantity") @db.Decimal(10, 4)
+  unitPrice       Decimal       @default(0.0000) @map("unitPrice") @db.Decimal(18, 4)
+  discountPerItem Decimal       @default(0.0000) @map("discountPerItem") @db.Decimal(18, 4)
+  totalPrice      Decimal       @map("totalPrice") @db.Decimal(18, 4)
+  itemOrder       Int?          @map("itemOrder") @db.Int
+  notes           String?       @db.Text @map("notes")
+  createdAt       DateTime      @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt       DateTime      @updatedAt @map("updatedAt") @db.DateTime(0)
+
+  // Relaciones
+  workOrder       WorkOrder     @relation(fields: [workOrderId], references: [workOrderId], onDelete: Cascade, onUpdate: Cascade)
+  productAndService ProductAndService? @relation(fields: [itemId], references: [itemId], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([workOrderId], name: "idx_workOrderItem_workOrderId")
+  @@index([itemId], name: "fk_workOrderItems_itemId")
+  @@map("workOrderItems")
+}
+
+model WorkOrderStatus {
+  workOrderStatusId String        @id @default(uuid()) @db.VarChar(36) @map("workOrderStatusId")
+  statusName        String        @unique @db.VarChar(100) @map("statusName")
+  description       String?       @db.VarChar(255) @map("description")
+  displayOrder      Int           @unique @map("displayOrder") @db.Int
+  isFinal           Boolean?      @default(false) @map("isFinal") @db.TinyInt
+  isActive          Boolean?      @default(true) @map("isActive") @db.TinyInt
+  createdAt         DateTime      @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt         DateTime      @updatedAt @map("updatedAt") @db.DateTime(0)
+
+  // Relaciones
+  workOrders        WorkOrder[]
+
+  @@index([statusName], name: "idx_workOrderStatus_name")
+  @@index([displayOrder], name: "idx_workOrderStatus_displayOrder")
+  @@map("workOrderStatuses")
+}
+
+model WorkOrder {
+  workOrderId       String        @id @default(uuid()) @db.VarChar(36) @map("workOrderId")
+  companyId         String        @db.VarChar(36) @map("companyId")
+  quoteId           String        @unique @db.VarChar(36) @map("quoteId")
+  clientId          String        @db.VarChar(36) @map("clientId")
+  branchId          String?       @db.VarChar(36) @map("branchId")
+  contactId         String?       @db.VarChar(36) @map("contactId")
+  userId            String        @db.VarChar(36) @map("userId")
+  workOrderNumber   String        @unique @db.VarChar(50) @map("workOrderNumber")
+  issueDate         DateTime      @default(now()) @map("issueDate") @db.Date // DATE type
+  startDate         DateTime?     @map("startDate") @db.Date // DATE type
+  endDate           DateTime?     @map("endDate") @db.Date // DATE type
+  workOrderStatusId String        @db.VarChar(36) @map("workOrderStatusId")
+  paymentStatusId   String        @db.VarChar(36) @map("paymentStatusId")
+  totalAmount       Decimal       @default(0.0000) @map("totalAmount") @db.Decimal(18, 4)
+  paidAmount        Decimal       @default(0.0000) @map("paidAmount") @db.Decimal(18, 4)
+  remainingAmount   Decimal       @default(0.0000) @map("remainingAmount") @db.Decimal(18, 4)
+  notes             String?       @db.Text @map("notes")
+  customerNotes     String?       @db.Text @map("customerNotes")
+  createdAt         DateTime      @default(now()) @map("createdAt") @db.DateTime(0)
+  updatedAt         DateTime      @updatedAt @map("updatedAt") @db.DateTime(0)
+
+  // Relaciones
+  company           Company       @relation(fields: [companyId], references: [companyId], onDelete: Restrict, onUpdate: Cascade)
+  quote             Quote         @relation(fields: [quoteId], references: [quoteId], onDelete: Restrict, onUpdate: Cascade)
+  client            Client        @relation(fields: [clientId], references: [clientId], onDelete: Restrict, onUpdate: Cascade)
+  clientBranch      ClientBranch? @relation(fields: [branchId], references: [branchId], onDelete: SetNull, onUpdate: Cascade)
+  clientContact     ClientContact? @relation(fields: [contactId], references: [contactId], onDelete: SetNull, onUpdate: Cascade)
+  user              User          @relation(fields: [userId], references: [userId], onDelete: Restrict, onUpdate: Cascade)
+  workOrderStatus   WorkOrderStatus @relation(fields: [workOrderStatusId], references: [workOrderStatusId], onDelete: Restrict, onUpdate: Cascade)
+  paymentStatus     PaymentStatus @relation(fields: [paymentStatusId], references: [paymentStatusId], onDelete: Restrict, onUpdate: Cascade)
+  workOrderItems    WorkOrderItem[]
+
+  @@index([workOrderNumber], name: "idx_workOrder_number")
+  @@index([clientId], name: "idx_workOrder_client")
+  @@index([workOrderStatusId], name: "idx_workOrder_status")
+  @@index([paymentStatusId], name: "idx_workOrder_paymentStatus")
+  @@index([branchId], name: "fk_workOrders_branchId")
+  @@index([contactId], name: "fk_workOrders_contactId")
+  @@index([userId], name: "fk_workOrders_userId")
+  @@index([companyId], name: "fk_workOrders_companyId")
+  @@map("workOrders")
+}
