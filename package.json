@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack & xdg-open http://localhost:3000",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -35,5 +35,9 @@
     "tailwindcss": "3.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=22.17.1 <23.0.0",
+    "pnpm": ">=10.13.1 <11.0.0"
   }
 }
