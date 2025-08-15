@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'media',
   content: [
     './app/**/*.{js,ts,jsx,tsx,mdx}', // Asegúrate de que esta línea esté presente
     './pages/**/*.{js,ts,jsx,tsx,mdx}', // Si usas la carpeta `pages` también

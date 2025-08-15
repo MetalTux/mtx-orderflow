@@ -10,7 +10,7 @@ import { User } from '@prisma/client'; // Importa el tipo User de Prisma
 async function findUserByEmail(email: string): Promise<User | null> {
   // Busca un usuario en la tabla 'user' de la base de datos por su email
   const user = await db.user.findUnique({
-    where: { userEmail: email },
+    where: { userEmail: email, isActive: true },
   });
   return user;
 }
@@ -69,7 +69,8 @@ export async function POST(request: Request) {
     });
 
     // 7. Preparar la respuesta HTTP
-    const response = NextResponse.json({ message: 'Login successful', accessToken }, { status: 200 });
+    //const response = NextResponse.json({ message: 'Login successful', accessToken }, { status: 200 });
+    const response = NextResponse.json({ message: 'Login successful', user: { name: user.userName, role: user.role } }, { status: 200 });
 
     // 8. Establecer el Refresh Token como una cookie segura
     response.cookies.set('refreshToken', refreshToken, {
@@ -78,6 +79,15 @@ export async function POST(request: Request) {
       sameSite: 'strict', // Protege contra ataques CSRF
       path: '/', // La cookie es accesible en todas las rutas de tu dominio
       maxAge: 7 * 24 * 60 * 60, // 7 días (ajusta según tu política de seguridad)
+    });
+
+    // 8. Establecer el Refresh Token como una cookie segura
+    response.cookies.set('accessToken', accessToken, {
+      httpOnly: true, // La cookie no es accesible desde JavaScript del lado del cliente
+      secure: process.env.NODE_ENV === 'production', // Solo se envía sobre HTTPS en producción
+      sameSite: 'strict', // Protege contra ataques CSRF
+      path: '/', // La cookie es accesible en todas las rutas de tu dominio
+      maxAge: 30 * 60, // 30 minutos (ajusta según tu política de seguridad)
     });
 
     return response;

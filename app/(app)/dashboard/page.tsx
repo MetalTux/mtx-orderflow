@@ -18,10 +18,6 @@ export default function DashboardPage() {
           (Esta es solo una página de ejemplo. La funcionalidad real se construirá pronto).
         </p>
       </div>
-      {/* Aquí podrías añadir un botón de Logout más adelante */}
-      {/* <button className="mt-8 px-6 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">
-        Cerrar Sesión
-      </button> */}
     </div>
   );
 }
