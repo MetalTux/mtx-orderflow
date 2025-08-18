@@ -380,14 +380,14 @@ model User {
   userEmail      String        @unique @db.VarChar(500) @map("userEmail")
   userPassword   String        @db.VarChar(500) @map("userPassword")
   userName       String        @db.VarChar(500) @map("userName")
-  companyId      String        @db.VarChar(36) @map("companyId")
+  companyId      String?       @db.VarChar(36) @map("companyId")
   role           String        @db.VarChar(100) @map("role")
   createdAt      DateTime      @default(now()) @map("createdAt") @db.DateTime(0)
   updatedAt      DateTime      @updatedAt @map("updatedAt") @db.DateTime(0)
   isActive       Boolean       @default(true) @map("isActive") @db.TinyInt
 
   // Relaciones
-  company        Company       @relation(fields: [companyId], references: [companyId], onDelete: Restrict, onUpdate: Restrict) // Ajuste para onDelete por defecto
+  company        Company?      @relation(fields: [companyId], references: [companyId], onDelete: Restrict, onUpdate: Restrict) // Ajuste para onDelete por defecto
   userSessions   UserSession[]
   quotes         Quote[]
   workOrders     WorkOrder[]

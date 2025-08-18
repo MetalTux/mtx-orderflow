@@ -18,9 +18,9 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
   const isActive = (path: string) => pathname === path;
 
   return (
-    <aside className="w-64 bg-gray-800 text-white flex flex-col h-full shadow-lg">
+    <aside className="w-64 bg-gray-800 text-white flex flex-col h-full shadow-lg dark:bg-gray-900 dark:text-gray-100">
       {/* Encabezado del Sidebar - Logo/Título de la aplicación */}
-      <div className="p-4 bg-gray-900 text-blue-400 font-extrabold text-2xl border-b border-gray-700">
+      <div className="p-4 bg-gray-900 text-blue-400 font-extrabold text-2xl border-b border-gray-700 dark:bg-gray-950 dark:border-gray-800">
         OrderFlow
       </div>
 
@@ -32,7 +32,7 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
               href="/dashboard"
               className={`
                 block p-2 rounded-md transition-colors duration-200
-                ${isActive('/dashboard') ? 'bg-blue-600 text-white' : 'hover:bg-gray-700 text-gray-200'}
+                ${isActive('/dashboard') ? 'bg-blue-600 text-white dark:bg-blue-700' : 'hover:bg-gray-700 text-gray-200 dark:hover:bg-gray-700 dark:text-gray-300'}
               `}
             >
               Dashboard
@@ -43,7 +43,7 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
               href="/users"
               className={`
                 block p-2 rounded-md transition-colors duration-200
-                ${isActive('/users') ? 'bg-blue-600 text-white' : 'hover:bg-gray-700 text-gray-200'}
+                ${isActive('/users') ? 'bg-blue-600 text-white dark:bg-blue-700' : 'hover:bg-gray-700 text-gray-200 dark:hover:bg-gray-700 dark:text-gray-300'}
               `}
             >
               Usuarios
@@ -54,7 +54,7 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
               href="/companies"
               className={`
                 block p-2 rounded-md transition-colors duration-200
-                ${isActive('/companies') ? 'bg-blue-600 text-white' : 'hover:bg-gray-700 text-gray-200'}
+                ${isActive('/companies') ? 'bg-blue-600 text-white dark:bg-blue-700' : 'hover:bg-gray-700 text-gray-200 dark:hover:bg-gray-700 dark:text-gray-300'}
               `}
             >
               Empresas
@@ -67,7 +67,7 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
                 href="/admin"
                 className={`
                   block p-2 rounded-md transition-colors duration-200
-                  ${isActive('/admin') ? 'bg-blue-600 text-white' : 'hover:bg-gray-700 text-gray-200'}
+                  ${isActive('/admin') ? 'bg-blue-600 text-white dark:bg-blue-700' : 'hover:bg-gray-700 text-gray-200 dark:hover:bg-gray-700 dark:text-gray-300'}
                 `}
               >
                 Panel Admin
@@ -78,20 +78,20 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
       </nav>
 
       {/* Sección de Información de Usuario y Cerrar Sesión */}
-      <div className="mt-auto p-4 border-t border-gray-700 text-sm text-gray-400">
+      <div className="mt-auto p-4 border-t border-gray-700 text-sm text-gray-400 dark:border-gray-700">
         {user ? ( // Mostrar información del usuario si está logueado
           <div className="mb-4">
-            <p className="font-semibold text-gray-200">Bienvenido,</p>
-            <p className="text-lg text-white">{user.name}</p>
-            {user.role && <p className="text-xs text-gray-400">Rol: {user.role}</p>}
+            <p className="font-semibold text-gray-200 dark:text-gray-200">Bienvenido,</p>
+            <p className="text-lg text-white dark:text-white">{user.name}</p>
+            {user.role && <p className="text-xs text-gray-400 dark:text-gray-400">Rol: {user.role}</p>}
           </div>
         ) : (
-          <p className="mb-4">Cargando información del usuario...</p>
+          <p className="mb-4 text-gray-400 dark:text-gray-400">Cargando información del usuario...</p>
         )}
 
         <button
           onClick={onLogout} // Llama a la función onLogout pasada por prop
-          className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+          className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 dark:bg-red-700 dark:hover:bg-red-800 dark:focus:ring-red-600"
         >
           Cerrar Sesión
         </button>

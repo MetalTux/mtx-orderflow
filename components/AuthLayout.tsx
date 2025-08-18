@@ -30,8 +30,8 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   // Si la aplicación está cargando el estado de autenticación (ej. al inicio, llamando a /api/auth/me)
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-100">
-        <p className="text-xl text-gray-700">Cargando sesión...</p>
+      <div className="flex justify-center items-center h-screen bg-gray-100 dark:bg-gray-950">
+        <p className="text-xl text-gray-700 dark:text-gray-300">Cargando sesión...</p>
       </div>
     );
   }
@@ -47,11 +47,11 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   // renderizamos el layout completo con el sidebar.
   // IMPORTANTE: Este AuthLayout SOLO DEBE USARSE EN LAS RUTAS PROTEGIDAS, NO EN LA PÁGINA /login.
   return (
-    <div className="flex h-screen"> {/* Contenedor principal del layout */}
+    <div className="flex h-screen overflow-hidden bg-gray-100 dark:bg-gray-950"> {/* Contenedor principal del layout */}
       {/* Acá va el Sidebar nuevo */}
       <Sidebar user={user} onLogout={logout} /> {/* <-- ¡Aquí usamos nuestro Sidebar! Le pasamos el usuario y la función de logout */}
       {/* Contenido Principal de la aplicación */}
-      <main className="flex-grow overflow-y-auto bg-gray-100">
+      <main className="flex-grow overflow-y-auto bg-gray-100 dark:bg-gray-900 dark:text-gray-100">
         {children} {/* Aquí se renderizarán las páginas protegidas (dashboard, users, etc.) */}
       </main>
     </div>
