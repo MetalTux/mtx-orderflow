@@ -1,6 +1,6 @@
 // app/api/users/route.ts
 import { NextResponse, NextRequest } from 'next/server';
-import { db } from '@/lib/db';
+import { db, withRetry } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { jwtVerify } from 'jose';
 
@@ -33,24 +33,26 @@ export async function GET(request: NextRequest) {
       whereClause = { companyId: userCompanyId };
     }
 
-    const users = await db.user.findMany({
-      where: whereClause,
-      select: {
-        userId: true,
-        userEmail: true,
-        userName: true,        
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-        isActive: true,
-        company: {
-          select: {
-            companyId: true,
-            companyName: true,
+    const users = await withRetry(() => 
+      db.user.findMany({
+        where: whereClause,
+        select: {
+          userId: true,
+          userEmail: true,
+          userName: true,        
+          role: true,
+          createdAt: true,
+          updatedAt: true,
+          isActive: true,
+          company: {
+            select: {
+              companyId: true,
+              companyName: true,
+            }
           }
-        }
-      },
-    });
+        },
+      })
+    );
     return NextResponse.json(users);
   } catch (error) {
     console.error('Error obteniendo los usuarios:', error);

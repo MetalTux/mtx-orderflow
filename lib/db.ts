@@ -23,3 +23,25 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 export { db };
+
+// Función genérica para reintentar consultas
+export async function withRetry<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
+  let attempt = 0;
+  while (attempt < retries) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      // Códigos de error de conexión de Prisma
+      if (error.code === 'P1001' || error.code === 'P2002' || error.code === 'P1014') {
+        console.warn(`Error de conexión a la BD, reintentando... (Intento ${attempt + 1})`);
+        attempt++;
+        // Espera un momento antes de reintentar
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      } else {
+        // Si no es un error de conexión, lanzar el error de inmediato
+        throw error;
+      }
+    }
+  }
+  throw new Error('Falló la conexión a la base de datos después de varios reintentos.');
+}
