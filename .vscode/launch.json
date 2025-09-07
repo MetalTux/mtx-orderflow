@@ -1,0 +1,33 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Next.js: Depurar ambos",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm run dev",
+      //"serverReadyAction": {
+      //  "pattern": "- Local:\\s+(https?://[\\w\\d.-]+:[0-9]+)",
+      //  "uriFormat": "%s",
+      //  "action": "openExternally"
+      //}
+    },
+    {
+      "name": "Next.js: Depurar frontend",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:1657",
+      "webRoot": "${workspaceFolder}",
+      "runtimeExecutable": "/usr/bin/brave-browser" // <- AGREGAR ESTA LÍNEA
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack Next.js",
+      "configurations": [
+        "Next.js: Depurar ambos",
+        "Next.js: Depurar frontend"
+      ]
+    }
+  ]
+}
